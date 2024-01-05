@@ -1,0 +1,206 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+public class Ejercicio1 {
+    static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+	public static void main(String[] args) throws IOException {
+        ArrayList<Cliente> listaClientes = new ArrayList<Cliente>();
+        String id;
+        boolean aux;
+
+        listaClientes.add(new Cliente("1010", "Pablo", "Pablo1010"));
+        listaClientes.add(new Cliente("1011", "Oscar", "Oscar1011"));
+        listaClientes.add(new Cliente("1012", "Laura", "Laura1012"));
+        listaClientes.add(new Cliente("1013", "Carla", "Carla1013"));
+        listaClientes.add(new Cliente("1014", "Sonia", "Sonia1014"));
+
+        System.out.println("Ingrese un usuario válido o \"SALIR\" para salir:");
+
+        do {
+        	aux = true;
+            System.out.println("Ingrese Id:");
+            id = in.readLine();
+            Cliente cActual = validaUsuario(id, listaClientes);
+            aux = validaPass(cActual);
+            if(aux) {
+            	menu(cActual,listaClientes);
+            }            
+        } while (!id.toUpperCase().equals("SALIR"));        
+    }
+
+    public static Cliente validaUsuario(String id, ArrayList<Cliente> listaClientes) throws IOException {
+        Cliente cliente = new Cliente();
+        for (int i = 0; i < listaClientes.size(); i++) {
+            if (listaClientes.get(i).getId().equals(id)) {
+                cliente = listaClientes.get(i);
+                break;
+            }
+        }
+        if (cliente.getActivo() == false && cliente.getId() != null) {
+            System.out.println("Su cuenta se encuentra bloqueada.");
+        }
+        return cliente;
+    }
+
+    public static boolean validaPass(Cliente cliente) throws IOException {
+        int intentos = 0;
+        boolean aux = false;
+        while (cliente.getActivo() == true) {
+            if (cliente.getId() != null) {
+				System.out.println("Pass: " + cliente.getPass());
+                System.out.println("Ingrese Contraseña:");                
+                String pass = in.readLine();
+                if (cliente.getPass().equals(pass)) {
+                	aux = true;
+                	break;
+                } else {
+                    intentos++;
+                    bloqueoCuenta(cliente, intentos);
+                }
+            }
+        }
+        return aux;
+    }
+
+    public static void bloqueoCuenta(Cliente cliente, int intentos) {
+        if (intentos == 3 || cliente.getActivo() != true) {
+            cliente.setActivo(false);
+            System.out.println("Su cuenta ha sido bloqueda.");
+        }
+    }
+
+    public static void menu(Cliente cliente,ArrayList<Cliente> listaClientes) throws NumberFormatException, IOException {
+        int opcion = 0;
+        int monto = 0;
+        String id = "";
+        do {
+            System.out.println("\nMenú Principal\n1- Deposito\n2- Retiro");
+            System.out.println("3- Consulta\n4- Transferencia\n0-Cerrar Sesión");
+            opcion = validarEntero();
+            switch (opcion) {
+            case 1:
+            	System.out.println("\nIngrese el monto del deposito");
+            	monto = validarEntero();
+            	if(validarMonto(monto)) {
+            		deposito(cliente,monto);
+					System.out.println("\nDeposito exitoso");
+            	}else {
+            		System.out.println("\nIngrese un monto válido");
+            	}
+                break;
+            case 2:
+            	System.out.println("\nIngrese el monto del retiro");
+            	monto = validarEntero();
+            	if(validarMonto(monto,cliente)) {
+            		deposito(cliente,-monto);
+					System.out.println("\nRetiro exitoso");
+            	}else {
+            		System.out.println("\nIngrese un monto válido");
+            	}
+                break;
+            case 3:
+            	System.out.println("\nSu saldo es: " + cliente.getFondos());
+                break;
+            case 4:
+            	System.out.println("Ingrese el monto del deposito:");
+            	monto = validarEntero(); 
+            	System.out.println("Ingrese el id al que desea transferir:");
+            	id = in.readLine();  
+            	transferencia(cliente, monto, id, listaClientes);
+                break;
+            case 0:   
+				System.out.println("Gracias por utilizar nuestro servicios");	             			
+                break;
+            default:
+                System.out.println("X Opción inválida X");
+                break;
+            }
+        } while (opcion != 0);
+    }
+	
+    public static void deposito(Cliente cliente, int monto) {
+    	monto += cliente.getFondos();
+		cliente.setFondos(monto);
+    }
+	
+    public static void transferencia(Cliente cActual, int monto, String id, ArrayList<Cliente> listaClientes) throws IOException {
+    	Cliente cTransfer = new Cliente();
+    	cTransfer = validaUsuario(id, listaClientes);    	
+    	if(cTransfer.getId() != null && validarMonto(monto,cActual)) {
+    		deposito(cTransfer,monto);
+        	deposito(cActual,-monto);
+    		System.out.println("\nTransferencia exitosa");
+    	}else {
+    		System.out.println("\nDatos inválidos");
+    	}
+    }
+	
+    public static boolean validarMonto(int monto) {
+    	boolean aux = false;
+    	if(monto>0) aux= true;
+    	return aux;
+    }
+	
+    public static boolean validarMonto(int monto, Cliente cliente) {
+    	boolean aux = false;
+    	if(monto>0&&monto<=cliente.getFondos()) aux= true;
+    	return aux;
+    }
+	
+    public static int validarEntero() {
+    	int entero = 0;
+    	try {
+    		entero = Integer.parseInt(in.readLine());
+        }catch(Exception e ){
+        	entero = -1;
+        }		
+    	return entero;
+    }
+}
+	
+class Cliente {
+	private String id, nombre, pass;
+	private boolean activo;
+	private int fondos;
+	
+	public Cliente() {
+	}
+	
+	public Cliente(String id, String nombre, String pass) {
+		this.id = id;
+		this.nombre = nombre;
+		this.pass = pass;
+		this.activo = true;
+		this.fondos = 2000;
+	}
+	
+	public String getId() {
+		return this.id;
+	}
+	
+	public String getNombre() {
+		return this.nombre;
+	}
+	
+	public String getPass() {
+		return this.pass;
+	}
+	
+	public boolean getActivo() {
+		return this.activo;
+	}
+	
+	public int getFondos() {
+		return this.fondos;
+	}
+	
+	public void setActivo(boolean activo) {
+		this.activo = activo;
+	}
+	
+	public void setFondos(int fondos) {
+		this.fondos = fondos;
+	}   	
+}
